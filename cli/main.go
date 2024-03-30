@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/enindu/wsh"
@@ -27,7 +28,7 @@ func main() {
 		Network: wsh.Network,
 	}
 
-	listener, err := socket.Listener()
+	listener, err := socket.Listen()
 	if err != nil {
 		fmt.Printf("\r%v\n", err)
 		return
@@ -40,5 +41,20 @@ func main() {
 		Directory: wsh.Directory,
 		Methods:   wsh.Methods,
 		Mime:      wsh.Mime,
+	}
+
+	server := &wsh.Server{
+		Handler:      handler,
+		IdleTimeout:  wsh.IdleTimeout,
+		Listener:     listener,
+		Log:          log.Default(),
+		ReadTimeout:  wsh.ReadTimeout,
+		WriteTimeout: wsh.WriteTimeout,
+	}
+
+	err = server.Run()
+	if err != nil {
+		fmt.Printf("\r%v\n", err)
+		return
 	}
 }

@@ -2,8 +2,11 @@
     "network": "tcp",
     "host": "127.0.0.1",
     "port": "5000",
-    "mime": "text/plain; charset=UTF-8",
+    "readTimeout": 5,
+    "writeTimeout": 5,
+    "idleTimeout": 60,
     "directory": ".",
+    "mime": "text/plain; charset=UTF-8",
     "methods": ["GET", "HEAD"],
     "commands": {
         "cat": ["--help"],

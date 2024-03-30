@@ -24,7 +24,7 @@ type Socket struct {
 	Network string
 }
 
-func (s *Socket) Listener() (*net.TCPListener, error) {
+func (s *Socket) Listen() (*net.TCPListener, error) {
 	address, err := net.ResolveTCPAddr(s.Network, s.Address)
 	if err != nil {
 		return nil, fmt.Errorf("listener: %w", err)

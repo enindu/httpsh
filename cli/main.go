@@ -12,27 +12,22 @@
 // You should have received a copy of the GNU General Public License along with
 // wsh. If not, see <https://www.gnu.org/licenses/>.
 
-package wsh
+package main
 
-import "github.com/spf13/viper"
+import (
+	"fmt"
 
-var (
-	Network     string              = viper.GetString("network")
-	Host        string              = viper.GetString("host")
-	Port        string              = viper.GetString("port")
-	ContentType string              = viper.GetString("content_type")
-	Directory   string              = viper.GetString("directory")
-	Whitelist   map[string][]string = viper.GetStringMapStringSlice("whitelist")
+	"github.com/enindu/wsh"
 )
 
-func init() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.wsh/")
-	viper.AddConfigPath(".")
+func main() {
+	socket := wsh.NewSocket(wsh.Network, wsh.Host, wsh.Port)
 
-	err := viper.ReadInConfig()
+	listener, err := socket.Listener()
 	if err != nil {
-		panic(err)
+		fmt.Printf("\r%v\n", err)
+		return
 	}
+
+	defer listener.Close()
 }

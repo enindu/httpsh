@@ -14,25 +14,35 @@
 
 package wsh
 
-import "github.com/spf13/viper"
-
-var (
-	Network     string              = viper.GetString("network")
-	Host        string              = viper.GetString("host")
-	Port        string              = viper.GetString("port")
-	ContentType string              = viper.GetString("content_type")
-	Directory   string              = viper.GetString("directory")
-	Whitelist   map[string][]string = viper.GetStringMapStringSlice("whitelist")
+import (
+	"fmt"
+	"net"
 )
 
-func init() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.wsh/")
-	viper.AddConfigPath(".")
+type Socket struct {
+	network string
+	address string
+}
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(err)
+func NewSocket(n string, h string, p string) *Socket {
+	address := net.JoinHostPort(h, p)
+
+	return &Socket{
+		network: n,
+		address: address,
 	}
+}
+
+func (s *Socket) Listener() (*net.TCPListener, error) {
+	address, err := net.ResolveTCPAddr(s.network, s.address)
+	if err != nil {
+		return nil, fmt.Errorf("listener: %w", err)
+	}
+
+	listener, err := net.ListenTCP(s.network, address)
+	if err != nil {
+		return nil, fmt.Errorf("listener: %w", err)
+	}
+
+	return listener, nil
 }

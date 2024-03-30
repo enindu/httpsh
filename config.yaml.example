@@ -1,5 +1,6 @@
 network: tcp
-host: 127.0.0.1:5000
+host: 127.0.0.1
+port: 5000
 content_type: text/plain; charset=UTF-8
 directory: .
 whitelist:

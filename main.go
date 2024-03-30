@@ -50,7 +50,7 @@ var (
 
 func init() {
 	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	viper.SetConfigType("json")
 	viper.AddConfigPath("$HOME/.wsh/")
 	viper.AddConfigPath(".")
 

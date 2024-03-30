@@ -15,33 +15,25 @@
 package wsh
 
 import (
-	"bytes"
 	"net/http"
+	"strings"
 )
 
 type Response struct {
-	contentType string
-	buffer      *bytes.Buffer
-	writer      http.ResponseWriter
+	methods []string
+	mime    string
+	writer  http.ResponseWriter
 }
 
-func newResponse(t string, w http.ResponseWriter) *Response {
-	w.Header().Set("Content-Type", t)
-
-	return &Response{
-		contentType: t,
-		buffer:      &bytes.Buffer{},
-		writer:      w,
+func (r *Response) write(c int, e error) {
+	if c == StatusMethodNotAllowed {
+		allow := strings.Join(r.methods, ",")
+		r.writer.Header().Set("Allow", allow)
 	}
-}
 
-func (r *Response) writeError(e error) {
 	body := e.Error()
 
-	r.buffer.WriteString(body)
-
-	response := r.buffer.Bytes()
-
-	r.writer.WriteHeader(http.StatusBadRequest)
-	r.writer.Write(response)
+	r.writer.Header().Set("Content-Type", r.mime)
+	r.writer.WriteHeader(c)
+	r.writer.Write([]byte(body))
 }

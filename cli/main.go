@@ -23,8 +23,8 @@ import (
 
 func main() {
 	socket := &wsh.Socket{
-		Network: wsh.Network,
 		Address: net.JoinHostPort(wsh.Host, wsh.Port),
+		Network: wsh.Network,
 	}
 
 	listener, err := socket.Listener()
@@ -34,4 +34,11 @@ func main() {
 	}
 
 	defer listener.Close()
+
+	handler := &wsh.Handler{
+		Commands:  wsh.Commands,
+		Directory: wsh.Directory,
+		Methods:   wsh.Methods,
+		Mime:      wsh.Mime,
+	}
 }

@@ -15,22 +15,140 @@
 package wsh
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"slices"
+	"strings"
 )
 
 type Handler struct {
-	ContentType string
-	Directory   string
-	Whitelist   map[string][]string
+	Commands  map[string][]string
+	Directory string
+	Methods   []string
+	Mime      string
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	response := newResponse(h.ContentType, w)
+	response := &Response{
+		methods: h.Methods,
+		mime:    h.Mime,
+		writer:  w,
+	}
 
 	err := os.Chdir(h.Directory)
 	if err != nil {
-		response.writeError(err)
+		response.write(StatusBadRequest, err)
 		return
 	}
+
+	if !slices.Contains(h.Methods, r.Method) {
+		response.write(StatusMethodNotAllowed, ErrorMethodNotAllowed)
+		return
+	}
+
+	queries := r.URL.Query()
+	if len(queries) < 1 {
+		response.write(StatusUnprocessableContent, ErrorQueryInvalid)
+		return
+	}
+
+	if len(queries["e"]) != 1 {
+		response.write(StatusUnprocessableContent, ErrorOneExecutableAllowed)
+		return
+	}
+
+	options, ok := h.Commands[queries["e"][0]]
+	if !ok {
+		response.write(StatusUnprocessableContent, ErrorExecutableNotFound)
+		return
+	}
+
+	arguments := []string{}
+
+	if len(queries["a"]) > 0 {
+		for _, v := range queries["a"] {
+			if len(v) < 3 {
+				response.write(StatusUnprocessableContent, ErrorArgumentsInvalid)
+				return
+			}
+
+			switch v[:2] {
+			case "d|":
+				directory := filepath.Join("./", v[2:])
+
+				info, err := os.Stat(directory)
+				if err != nil {
+					response.write(StatusBadRequest, err)
+					return
+				}
+
+				if !info.IsDir() {
+					response.write(StatusUnprocessableContent, ErrorTargetNotDirectory)
+					return
+				}
+
+				arguments = append(arguments, directory)
+			case "f|":
+				file := filepath.Join("./", v[2:])
+
+				info, err := os.Stat(file)
+				if err != nil {
+					response.write(StatusBadRequest, err)
+					return
+				}
+
+				if info.IsDir() {
+					response.write(StatusUnprocessableContent, ErrorTargetNotFile)
+					return
+				}
+
+				arguments = append(arguments, file)
+			case "o|":
+				if !slices.Contains(options, v[2:]) {
+					response.write(StatusUnprocessableContent, ErrorOptionNotFound)
+					return
+				}
+
+				arguments = append(arguments, v[2:])
+			case "t|":
+				if !strings.HasPrefix(v[2:], "'") || !strings.HasSuffix(v[2:], "'") {
+					response.write(StatusUnprocessableContent, ErrorTextInvalid)
+					return
+				}
+
+				arguments = append(arguments, v[2:])
+			default:
+				response.write(StatusUnprocessableContent, ErrorArgumentsInvalid)
+				return
+			}
+		}
+	}
+
+	reader, writer := io.Pipe()
+
+	defer writer.Close()
+
+	tailer := strings.Join(arguments, " ")
+	line := fmt.Sprintf("%s %s", queries["e"][0], tailer)
+	command := exec.Command("sh", "-c", line)
+
+	command.Stdout = writer
+	command.Stderr = writer
+
+	go write(w, reader)
+
+	err = command.Run()
+	if err != nil {
+		response.write(StatusBadRequest, err)
+		return
+	}
+}
+
+func write(w http.ResponseWriter, r *io.PipeReader) {
+	io.Copy(w, r)
+	r.Close()
 }

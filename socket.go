@@ -20,8 +20,8 @@ import (
 )
 
 type Socket struct {
-	Network string
 	Address string
+	Network string
 }
 
 func (s *Socket) Listener() (*net.TCPListener, error) {

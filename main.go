@@ -14,15 +14,38 @@
 
 package wsh
 
-import "github.com/spf13/viper"
+import (
+	"errors"
+
+	"github.com/spf13/viper"
+)
+
+const (
+	StatusBadRequest           int = 400
+	StatusMethodNotAllowed     int = 405
+	StatusUnprocessableContent int = 422
+)
 
 var (
-	Network     string              = viper.GetString("network")
-	Host        string              = viper.GetString("host")
-	Port        string              = viper.GetString("port")
-	ContentType string              = viper.GetString("content_type")
-	Directory   string              = viper.GetString("directory")
-	Whitelist   map[string][]string = viper.GetStringMapStringSlice("whitelist")
+	ErrorMethodNotAllowed     error = errors.New("method is not allowed")
+	ErrorQueryInvalid         error = errors.New("query is invalid")
+	ErrorOneExecutableAllowed error = errors.New("one executable allowed")
+	ErrorExecutableNotFound   error = errors.New("executable is not found")
+	ErrorArgumentsInvalid     error = errors.New("arguments are invalid")
+	ErrorTargetNotDirectory   error = errors.New("target is not a directory")
+	ErrorTargetNotFile        error = errors.New("target is not a file")
+	ErrorOptionNotFound       error = errors.New("option is not found")
+	ErrorTextInvalid          error = errors.New("text is invalid")
+)
+
+var (
+	Network   string              = viper.GetString("network")
+	Host      string              = viper.GetString("host")
+	Port      string              = viper.GetString("port")
+	Mime      string              = viper.GetString("mime")
+	Directory string              = viper.GetString("directory")
+	Methods   []string            = viper.GetStringSlice("methods")
+	Commands  map[string][]string = viper.GetStringMapStringSlice("commands")
 )
 
 func init() {

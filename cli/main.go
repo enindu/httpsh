@@ -16,12 +16,16 @@ package main
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/enindu/wsh"
 )
 
 func main() {
-	socket := wsh.NewSocket(wsh.Network, wsh.Host, wsh.Port)
+	socket := &wsh.Socket{
+		Network: wsh.Network,
+		Address: net.JoinHostPort(wsh.Host, wsh.Port),
+	}
 
 	listener, err := socket.Listener()
 	if err != nil {

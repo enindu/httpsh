@@ -20,26 +20,17 @@ import (
 )
 
 type Socket struct {
-	network string
-	address string
-}
-
-func NewSocket(n string, h string, p string) *Socket {
-	address := net.JoinHostPort(h, p)
-
-	return &Socket{
-		network: n,
-		address: address,
-	}
+	Network string
+	Address string
 }
 
 func (s *Socket) Listener() (*net.TCPListener, error) {
-	address, err := net.ResolveTCPAddr(s.network, s.address)
+	address, err := net.ResolveTCPAddr(s.Network, s.Address)
 	if err != nil {
 		return nil, fmt.Errorf("listener: %w", err)
 	}
 
-	listener, err := net.ListenTCP(s.network, address)
+	listener, err := net.ListenTCP(s.Network, address)
 	if err != nil {
 		return nil, fmt.Errorf("listener: %w", err)
 	}

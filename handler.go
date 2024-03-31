@@ -54,6 +54,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.URL.Path != "/" {
+		response.write(StatusForbidden, ErrorAccessDenied)
+		return
+	}
+
 	queries := r.URL.Query()
 	if len(queries) < 1 {
 		response.write(StatusUnprocessableContent, ErrorQueryInvalid)

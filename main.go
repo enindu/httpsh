@@ -22,12 +22,14 @@ import (
 
 const (
 	StatusBadRequest           int = 400
+	StatusForbidden            int = 403
 	StatusMethodNotAllowed     int = 405
 	StatusUnprocessableContent int = 422
 )
 
 var (
 	ErrorMethodNotAllowed     error = errors.New("method is not allowed")
+	ErrorAccessDenied         error = errors.New("access is denied")
 	ErrorQueryInvalid         error = errors.New("query is invalid")
 	ErrorOneExecutableAllowed error = errors.New("one executable allowed")
 	ErrorExecutableNotFound   error = errors.New("executable is not found")

@@ -22,30 +22,31 @@ import (
 )
 
 type Response struct {
-	responseWriter http.ResponseWriter
-	request        *http.Request
-	contentType    string
-	allowedMethods []string
-	log            *log.Logger
+	writer  http.ResponseWriter
+	request *http.Request
+	mime    string
+	methods []string
+	log     *log.Logger
 }
 
 func (r *Response) write(c int, e error) (int, error) {
-	if c == StatusMethodNotAllowed {
-		allow := strings.Join(r.allowedMethods, ",")
-		r.responseWriter.Header().Set("Allow", allow)
+	if c == http.StatusMethodNotAllowed {
+		allow := strings.Join(r.methods, ",")
+
+		r.writer.Header().Set("Allow", allow)
 	}
 
 	body := e.Error()
 
-	r.responseWriter.Header().Set("Content-Type", r.contentType)
-	r.responseWriter.WriteHeader(c)
 	r.log.Println(r.request.RemoteAddr, r.request.RequestURI, body)
+	r.writer.Header().Set("Content-Type", r.mime)
+	r.writer.WriteHeader(c)
 
-	return r.responseWriter.Write([]byte(body))
+	return r.writer.Write([]byte(body))
 }
 
 func (r *Response) copy(reader *io.PipeReader) (int64, error) {
-	length, err := io.Copy(r.responseWriter, reader)
+	length, err := io.Copy(r.writer, reader)
 	if err != nil {
 		return length, err
 	}

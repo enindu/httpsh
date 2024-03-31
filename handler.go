@@ -15,7 +15,6 @@
 package wsh
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -24,127 +23,173 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 )
 
 type Handler struct {
-	BaseDirectory      string
-	ContentType        string
-	AllowedMethods     []string
-	AllowedExecutables map[string][]string
-	Log                *log.Logger
+	Directory   string
+	Mime        string
+	Methods     []string
+	Executables map[string][]string
+	Log         *log.Logger
+	mutex       sync.Mutex
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response := &Response{
-		responseWriter: w,
-		request:        r,
-		contentType:    h.ContentType,
-		allowedMethods: h.AllowedMethods,
-		log:            h.Log,
+		writer:  w,
+		request: r,
+		mime:    h.Mime,
+		methods: h.Methods,
+		log:     h.Log,
 	}
 
-	err := os.Chdir(h.BaseDirectory)
+	err := os.Chdir(h.Directory)
 	if err != nil {
-		response.write(StatusBadRequest, err)
+		response.write(http.StatusBadRequest, err)
+
 		return
 	}
 
-	if !slices.Contains(h.AllowedMethods, r.Method) {
-		response.write(StatusMethodNotAllowed, ErrorMethodNotAllowed)
+	if !slices.Contains(h.Methods, r.Method) {
+		response.write(http.StatusMethodNotAllowed, ErrMethodNotAllowed)
+
 		return
 	}
 
 	if r.URL.Path != "/" {
-		response.write(StatusForbidden, ErrorAccessDenied)
+		response.write(http.StatusForbidden, ErrAccessDenied)
+
 		return
 	}
 
 	queries := r.URL.Query()
 	if len(queries) < 1 {
-		response.write(StatusUnprocessableContent, ErrorQueryInvalid)
+		response.write(http.StatusBadRequest, ErrQueryInvalid)
+
 		return
 	}
 
-	if len(queries["e"]) != 1 {
-		response.write(StatusUnprocessableContent, ErrorOneExecutableAllowed)
+	executable, options, err := h.program(queries)
+	if err != nil {
+		response.write(http.StatusBadRequest, err)
+
 		return
 	}
 
-	options, ok := h.AllowedExecutables[queries["e"][0]]
-	if !ok {
-		response.write(StatusUnprocessableContent, ErrorExecutableNotFound)
+	arguments, err := h.arguments(queries, options)
+	if err != nil {
+		response.write(http.StatusBadRequest, err)
+
 		return
 	}
 
-	arguments := []string{}
-	if len(queries["a"]) > 0 {
-		for _, v := range queries["a"] {
-			if len(v) < 3 {
-				response.write(StatusUnprocessableContent, ErrorArgumentsInvalid)
-				return
-			}
-
-			switch v[:2] {
-			case "d_":
-				directory := filepath.Join("./", v[2:])
-				info, err := os.Stat(directory)
-				if err != nil {
-					response.write(StatusBadRequest, err)
-					return
-				}
-
-				if !info.IsDir() {
-					response.write(StatusUnprocessableContent, ErrorTargetNotDirectory)
-					return
-				}
-
-				arguments = append(arguments, directory)
-			case "f_":
-				file := filepath.Join("./", v[2:])
-				info, err := os.Stat(file)
-				if err != nil {
-					response.write(StatusBadRequest, err)
-					return
-				}
-
-				if info.IsDir() {
-					response.write(StatusUnprocessableContent, ErrorTargetNotFile)
-					return
-				}
-
-				arguments = append(arguments, file)
-			case "o_":
-				if !slices.Contains(options, v[2:]) {
-					response.write(StatusUnprocessableContent, ErrorOptionNotFound)
-					return
-				}
-
-				arguments = append(arguments, v[2:])
-			case "t_":
-				if !strings.HasPrefix(v[2:], "'") || !strings.HasSuffix(v[2:], "'") {
-					response.write(StatusUnprocessableContent, ErrorTextInvalid)
-					return
-				}
-
-				arguments = append(arguments, v[2:])
-			default:
-				response.write(StatusUnprocessableContent, ErrorArgumentsInvalid)
-				return
-			}
-		}
-	}
-
+	line := h.line(executable, arguments)
 	reader, writer := io.Pipe()
 
 	defer writer.Close()
 
-	tailer := strings.Join(arguments, " ")
-	execution := fmt.Sprintf("%s %s", queries["e"][0], tailer)
-	command := exec.Command("sh", "-c", execution)
+	command := exec.Command("sh", "-c", line)
 	command.Stdout = writer
 	command.Stderr = writer
 
 	go response.copy(reader)
 
 	command.Run()
+}
+
+func (h *Handler) line(e string, a []string) string {
+	h.mutex.Lock()
+
+	defer h.mutex.Unlock()
+
+	builder := strings.Builder{}
+
+	defer builder.Reset()
+
+	builder.WriteString(e)
+	builder.WriteString(" ")
+
+	for _, v := range a {
+		builder.WriteString(v)
+		builder.WriteString(" ")
+	}
+
+	return builder.String()
+}
+
+func (h *Handler) arguments(q map[string][]string, o []string) (a []string, e error) {
+	h.mutex.Lock()
+
+	defer h.mutex.Unlock()
+
+	if len(q["a"]) > 0 {
+		for _, v := range q["a"] {
+			if len(v) < 3 {
+				return nil, ErrArgumentsInvalid
+			}
+
+			switch v[:2] {
+			case "d_":
+				directory := filepath.Join("./", v[2:])
+
+				info, err := os.Stat(directory)
+				if err != nil {
+					return nil, err
+				}
+
+				if !info.IsDir() {
+					return nil, ErrTargetNotDirectory
+				}
+
+				a = append(a, directory)
+			case "f_":
+				file := filepath.Join("./", v[2:])
+
+				info, err := os.Stat(file)
+				if err != nil {
+					return nil, err
+				}
+
+				if info.IsDir() {
+					return nil, ErrTargetNotFile
+				}
+
+				a = append(a, file)
+			case "o_":
+				if !slices.Contains(o, v[2:]) {
+					return nil, ErrOptionNotFound
+				}
+
+				a = append(a, v[2:])
+			case "t_":
+				if !strings.HasPrefix(v[2:], "'") || !strings.HasSuffix(v[2:], "'") {
+					return nil, ErrTextInvalid
+				}
+
+				a = append(a, v[2:])
+			default:
+				return nil, ErrArgumentsInvalid
+			}
+		}
+	}
+
+	return a, nil
+}
+
+func (h *Handler) program(q map[string][]string) (string, []string, error) {
+	h.mutex.Lock()
+
+	defer h.mutex.Unlock()
+
+	if len(q["e"]) != 1 {
+		return "", nil, ErrOneExecutableAllowed
+	}
+
+	options, ok := h.Executables[q["e"][0]]
+	if !ok {
+		return "", nil, ErrExecutableNotFound
+	}
+
+	return q["e"][0], options, nil
 }

@@ -27,21 +27,21 @@ import (
 )
 
 type Server struct {
-	Listener     *net.TCPListener
-	Handler      *Handler
-	ReadTimeout  int
-	WriteTimeout int
-	IdleTimeout  int
-	Log          *log.Logger
+	Listener *net.TCPListener
+	Handler  *Handler
+	Read     int
+	Write    int
+	Idle     int
+	Log      *log.Logger
 }
 
 func (s *Server) Run() error {
 	server := &http.Server{
 		Handler:           s.Handler,
-		ReadTimeout:       time.Duration(s.ReadTimeout) * time.Second,
+		ReadTimeout:       time.Duration(s.Read) * time.Second,
 		ReadHeaderTimeout: 0,
-		WriteTimeout:      time.Duration(s.WriteTimeout) * time.Second,
-		IdleTimeout:       time.Duration(s.IdleTimeout) * time.Second,
+		WriteTimeout:      time.Duration(s.Write) * time.Second,
+		IdleTimeout:       time.Duration(s.Idle) * time.Second,
 		ErrorLog:          s.Log,
 	}
 
@@ -50,6 +50,7 @@ func (s *Server) Run() error {
 	go server.Serve(s.Listener)
 
 	s.wait()
+
 	return s.stop(server)
 }
 
@@ -57,6 +58,7 @@ func (s *Server) wait() {
 	wait := make(chan os.Signal, 1)
 
 	signal.Notify(wait, syscall.SIGINT)
+
 	<-wait
 }
 

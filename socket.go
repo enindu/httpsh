@@ -27,17 +27,19 @@ type Socket struct {
 }
 
 func (s *Socket) Listen() (*net.TCPListener, error) {
-	address := net.JoinHostPort(s.Host, s.Port)
-	tcpAddress, err := net.ResolveTCPAddr(s.Network, address)
+	raw := net.JoinHostPort(s.Host, s.Port)
+
+	address, err := net.ResolveTCPAddr(s.Network, raw)
 	if err != nil {
 		return nil, err
 	}
 
-	tcpListener, err := net.ListenTCP(s.Network, tcpAddress)
+	listener, err := net.ListenTCP(s.Network, address)
 	if err != nil {
 		return nil, err
 	}
 
 	s.Log.Println("socket is listening on", address)
-	return tcpListener, nil
+
+	return listener, nil
 }

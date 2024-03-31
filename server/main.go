@@ -19,45 +19,49 @@ import (
 	"log"
 
 	"github.com/enindu/wsh"
+	"github.com/spf13/viper"
 )
 
 func main() {
 	logger := log.Default()
+
 	socket := &wsh.Socket{
-		Network: wsh.Network,
-		Host:    wsh.Host,
-		Port:    wsh.Port,
+		Network: viper.GetString("network"),
+		Host:    viper.GetString("host"),
+		Port:    viper.GetString("port"),
 		Log:     logger,
 	}
 
 	listener, err := socket.Listen()
 	if err != nil {
 		fmt.Printf("\r%v\n", err)
+
 		return
 	}
 
 	defer listener.Close()
 
 	handler := &wsh.Handler{
-		BaseDirectory:      wsh.BaseDirectory,
-		ContentType:        wsh.ContentType,
-		AllowedMethods:     wsh.AllowedMethods,
-		AllowedExecutables: wsh.AllowedExecutables,
-		Log:                logger,
+		Directory:   viper.GetString("directory"),
+		Mime:        viper.GetString("mime"),
+		Methods:     viper.GetStringSlice("methods"),
+		Executables: viper.GetStringMapStringSlice("executables"),
+		Log:         logger,
 	}
 
 	server := &wsh.Server{
-		Listener:     listener,
-		Handler:      handler,
-		ReadTimeout:  wsh.ReadTimeout,
-		WriteTimeout: wsh.WriteTimeout,
-		IdleTimeout:  wsh.IdleTimeout,
-		Log:          logger,
+		Listener: listener,
+		Handler:  handler,
+		Read:     viper.GetInt("read"),
+		Write:    viper.GetInt("write"),
+		Idle:     viper.GetInt("idle"),
+		Log:      logger,
 	}
 
 	err = server.Run()
 	if err != nil {
 		fmt.Printf("\r%v\n", err)
+
 		return
 	}
 }

@@ -4,16 +4,16 @@ host = "127.0.0.1"
 port = "5000"
 
 # Handler
-base_directory = "."
-content_type = "text/plain; charset=UTF-8"
-allowed_methods = ["GET", "HEAD"]
+directory = "."
+mime = "text/plain; charset=UTF-8"
+methods = ["GET", "HEAD"]
 
-[allowed_executables]
+[executables]
 cat = ["--help"]
 grep = ["--help"]
 ls = ["--help"]
 
 # Server
-read_timeout = 5
-write_timeout = 5
-idle_timeout = 60
+read = 5
+write = 5
+idle = 60

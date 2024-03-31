@@ -27,26 +27,25 @@ import (
 )
 
 type Server struct {
-	Handler      *Handler
-	IdleTimeout  int
 	Listener     *net.TCPListener
-	Log          *log.Logger
+	Handler      *Handler
 	ReadTimeout  int
 	WriteTimeout int
+	IdleTimeout  int
+	Log          *log.Logger
 }
 
 func (s *Server) Run() error {
 	server := &http.Server{
-		ErrorLog:     s.Log,
-		Handler:      s.Handler,
-		IdleTimeout:  time.Duration(s.IdleTimeout) * time.Second,
-		ReadTimeout:  time.Duration(s.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(s.WriteTimeout) * time.Second,
+		Handler:           s.Handler,
+		ReadTimeout:       time.Duration(s.ReadTimeout) * time.Second,
+		ReadHeaderTimeout: 0,
+		WriteTimeout:      time.Duration(s.WriteTimeout) * time.Second,
+		IdleTimeout:       time.Duration(s.IdleTimeout) * time.Second,
+		ErrorLog:          s.Log,
 	}
 
-	address := s.Listener.Addr().String()
-
-	s.Log.Println("server is started on", address)
+	s.Log.Println("server is started")
 
 	go server.Serve(s.Listener)
 

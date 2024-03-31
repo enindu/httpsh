@@ -39,16 +39,16 @@ var (
 )
 
 var (
-	Network      string
-	Host         string
-	Port         string
-	ReadTimeout  int
-	WriteTimeout int
-	IdleTimeout  int
-	Directory    string
-	Mime         string
-	Methods      []string
-	Commands     map[string][]string
+	Network            string
+	Host               string
+	Port               string
+	BaseDirectory      string
+	ContentType        string
+	AllowedMethods     []string
+	AllowedExecutables map[string][]string
+	ReadTimeout        int
+	WriteTimeout       int
+	IdleTimeout        int
 )
 
 func init() {
@@ -65,11 +65,11 @@ func init() {
 	Network = viper.GetString("network")
 	Host = viper.GetString("host")
 	Port = viper.GetString("port")
-	ReadTimeout = viper.GetInt("readTimeout")
-	WriteTimeout = viper.GetInt("writeTimeout")
-	IdleTimeout = viper.GetInt("idleTimeout")
-	Directory = viper.GetString("directory")
-	Mime = viper.GetString("mime")
-	Methods = viper.GetStringSlice("methods")
-	Commands = viper.GetStringMapStringSlice("commands")
+	BaseDirectory = viper.GetString("base_directory")
+	ContentType = viper.GetString("content_type")
+	AllowedMethods = viper.GetStringSlice("allowed_methods")
+	AllowedExecutables = viper.GetStringMapStringSlice("allowed_executables")
+	ReadTimeout = viper.GetInt("read_timeout")
+	WriteTimeout = viper.GetInt("write_timeout")
+	IdleTimeout = viper.GetInt("idle_timeout")
 }

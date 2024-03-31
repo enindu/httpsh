@@ -17,15 +17,17 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 
 	"github.com/enindu/wsh"
 )
 
 func main() {
+	logger := log.Default()
 	socket := &wsh.Socket{
-		Address: net.JoinHostPort(wsh.Host, wsh.Port),
 		Network: wsh.Network,
+		Host:    wsh.Host,
+		Port:    wsh.Port,
+		Log:     logger,
 	}
 
 	listener, err := socket.Listen()
@@ -37,19 +39,20 @@ func main() {
 	defer listener.Close()
 
 	handler := &wsh.Handler{
-		Commands:  wsh.Commands,
-		Directory: wsh.Directory,
-		Methods:   wsh.Methods,
-		Mime:      wsh.Mime,
+		BaseDirectory:      wsh.BaseDirectory,
+		ContentType:        wsh.ContentType,
+		AllowedMethods:     wsh.AllowedMethods,
+		AllowedExecutables: wsh.AllowedExecutables,
+		Log:                logger,
 	}
 
 	server := &wsh.Server{
-		Handler:      handler,
-		IdleTimeout:  wsh.IdleTimeout,
 		Listener:     listener,
-		Log:          log.Default(),
+		Handler:      handler,
 		ReadTimeout:  wsh.ReadTimeout,
 		WriteTimeout: wsh.WriteTimeout,
+		IdleTimeout:  wsh.IdleTimeout,
+		Log:          logger,
 	}
 
 	err = server.Run()

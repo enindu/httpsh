@@ -17,6 +17,7 @@ package wsh
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -26,26 +27,29 @@ import (
 )
 
 type Handler struct {
-	Commands  map[string][]string
-	Directory string
-	Methods   []string
-	Mime      string
+	BaseDirectory      string
+	ContentType        string
+	AllowedMethods     []string
+	AllowedExecutables map[string][]string
+	Log                *log.Logger
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response := &Response{
-		methods: h.Methods,
-		mime:    h.Mime,
-		writer:  w,
+		responseWriter: w,
+		request:        r,
+		contentType:    h.ContentType,
+		allowedMethods: h.AllowedMethods,
+		log:            h.Log,
 	}
 
-	err := os.Chdir(h.Directory)
+	err := os.Chdir(h.BaseDirectory)
 	if err != nil {
 		response.write(StatusBadRequest, err)
 		return
 	}
 
-	if !slices.Contains(h.Methods, r.Method) {
+	if !slices.Contains(h.AllowedMethods, r.Method) {
 		response.write(StatusMethodNotAllowed, ErrorMethodNotAllowed)
 		return
 	}
@@ -61,14 +65,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	options, ok := h.Commands[queries["e"][0]]
+	options, ok := h.AllowedExecutables[queries["e"][0]]
 	if !ok {
 		response.write(StatusUnprocessableContent, ErrorExecutableNotFound)
 		return
 	}
 
 	arguments := []string{}
-
 	if len(queries["a"]) > 0 {
 		for _, v := range queries["a"] {
 			if len(v) < 3 {
@@ -79,7 +82,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			switch v[:2] {
 			case "d|":
 				directory := filepath.Join("./", v[2:])
-
 				info, err := os.Stat(directory)
 				if err != nil {
 					response.write(StatusBadRequest, err)
@@ -94,7 +96,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				arguments = append(arguments, directory)
 			case "f|":
 				file := filepath.Join("./", v[2:])
-
 				info, err := os.Stat(file)
 				if err != nil {
 					response.write(StatusBadRequest, err)
@@ -133,9 +134,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer writer.Close()
 
 	tailer := strings.Join(arguments, " ")
-	line := fmt.Sprintf("%s %s", queries["e"][0], tailer)
-	command := exec.Command("sh", "-c", line)
-
+	execution := fmt.Sprintf("%s %s", queries["e"][0], tailer)
+	command := exec.Command("sh", "-c", execution)
 	command.Stdout = writer
 	command.Stderr = writer
 

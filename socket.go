@@ -16,24 +16,29 @@ package wsh
 
 import (
 	"fmt"
+	"log"
 	"net"
 )
 
 type Socket struct {
-	Address string
 	Network string
+	Host    string
+	Port    string
+	Log     *log.Logger
 }
 
 func (s *Socket) Listen() (*net.TCPListener, error) {
-	address, err := net.ResolveTCPAddr(s.Network, s.Address)
+	address := net.JoinHostPort(s.Host, s.Port)
+	tcpAddress, err := net.ResolveTCPAddr(s.Network, address)
 	if err != nil {
 		return nil, fmt.Errorf("listener: %w", err)
 	}
 
-	listener, err := net.ListenTCP(s.Network, address)
+	tcpListener, err := net.ListenTCP(s.Network, tcpAddress)
 	if err != nil {
 		return nil, fmt.Errorf("listener: %w", err)
 	}
 
-	return listener, nil
+	s.Log.Println("socket is listening on", address)
+	return tcpListener, nil
 }

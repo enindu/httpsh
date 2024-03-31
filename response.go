@@ -16,32 +16,36 @@ package wsh
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
 
 type Response struct {
-	methods []string
-	mime    string
-	writer  http.ResponseWriter
+	responseWriter http.ResponseWriter
+	request        *http.Request
+	contentType    string
+	allowedMethods []string
+	log            *log.Logger
 }
 
 func (r *Response) write(c int, e error) (int, error) {
 	if c == StatusMethodNotAllowed {
-		allow := strings.Join(r.methods, ",")
-		r.writer.Header().Set("Allow", allow)
+		allow := strings.Join(r.allowedMethods, ",")
+		r.responseWriter.Header().Set("Allow", allow)
 	}
 
 	body := e.Error()
 
-	r.writer.Header().Set("Content-Type", r.mime)
-	r.writer.WriteHeader(c)
+	r.responseWriter.Header().Set("Content-Type", r.contentType)
+	r.responseWriter.WriteHeader(c)
+	r.log.Println(r.request.RemoteAddr, r.request.RequestURI, body)
 
-	return r.writer.Write([]byte(body))
+	return r.responseWriter.Write([]byte(body))
 }
 
 func (r *Response) copy(i *io.PipeReader) (int64, error) {
-	length, err := io.Copy(r.writer, i)
+	length, err := io.Copy(r.responseWriter, i)
 	if err != nil {
 		return 0, err
 	}

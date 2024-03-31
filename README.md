@@ -1,3 +1,3 @@
 # wsh
 
-A shell environment, but for web
+A shell environment, but for HTTP

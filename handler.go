@@ -80,7 +80,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			switch v[:2] {
-			case "d|":
+			case "d_":
 				directory := filepath.Join("./", v[2:])
 				info, err := os.Stat(directory)
 				if err != nil {
@@ -94,7 +94,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				arguments = append(arguments, directory)
-			case "f|":
+			case "f_":
 				file := filepath.Join("./", v[2:])
 				info, err := os.Stat(file)
 				if err != nil {
@@ -108,14 +108,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				arguments = append(arguments, file)
-			case "o|":
+			case "o_":
 				if !slices.Contains(options, v[2:]) {
 					response.write(StatusUnprocessableContent, ErrorOptionNotFound)
 					return
 				}
 
 				arguments = append(arguments, v[2:])
-			case "t|":
+			case "t_":
 				if !strings.HasPrefix(v[2:], "'") || !strings.HasSuffix(v[2:], "'") {
 					response.write(StatusUnprocessableContent, ErrorTextInvalid)
 					return

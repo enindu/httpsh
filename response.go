@@ -15,6 +15,7 @@
 package wsh
 
 import (
+	"io"
 	"net/http"
 	"strings"
 )
@@ -25,7 +26,7 @@ type Response struct {
 	writer  http.ResponseWriter
 }
 
-func (r *Response) send(c int, e error) {
+func (r *Response) write(c int, e error) (int, error) {
 	if c == StatusMethodNotAllowed {
 		allow := strings.Join(r.methods, ",")
 		r.writer.Header().Set("Allow", allow)
@@ -35,5 +36,15 @@ func (r *Response) send(c int, e error) {
 
 	r.writer.Header().Set("Content-Type", r.mime)
 	r.writer.WriteHeader(c)
-	r.writer.Write([]byte(body))
+
+	return r.writer.Write([]byte(body))
+}
+
+func (r *Response) copy(i *io.PipeReader) (int64, error) {
+	length, err := io.Copy(r.writer, i)
+	if err != nil {
+		return 0, err
+	}
+
+	return length, i.Close()
 }

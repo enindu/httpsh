@@ -41,29 +41,29 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err := os.Chdir(h.Directory)
 	if err != nil {
-		response.write(StatusBadRequest, err)
+		response.send(StatusBadRequest, err)
 		return
 	}
 
 	if !slices.Contains(h.Methods, r.Method) {
-		response.write(StatusMethodNotAllowed, ErrorMethodNotAllowed)
+		response.send(StatusMethodNotAllowed, ErrorMethodNotAllowed)
 		return
 	}
 
 	queries := r.URL.Query()
 	if len(queries) < 1 {
-		response.write(StatusUnprocessableContent, ErrorQueryInvalid)
+		response.send(StatusUnprocessableContent, ErrorQueryInvalid)
 		return
 	}
 
 	if len(queries["e"]) != 1 {
-		response.write(StatusUnprocessableContent, ErrorOneExecutableAllowed)
+		response.send(StatusUnprocessableContent, ErrorOneExecutableAllowed)
 		return
 	}
 
 	options, ok := h.Commands[queries["e"][0]]
 	if !ok {
-		response.write(StatusUnprocessableContent, ErrorExecutableNotFound)
+		response.send(StatusUnprocessableContent, ErrorExecutableNotFound)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(queries["a"]) > 0 {
 		for _, v := range queries["a"] {
 			if len(v) < 3 {
-				response.write(StatusUnprocessableContent, ErrorArgumentsInvalid)
+				response.send(StatusUnprocessableContent, ErrorArgumentsInvalid)
 				return
 			}
 
@@ -82,12 +82,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				info, err := os.Stat(directory)
 				if err != nil {
-					response.write(StatusBadRequest, err)
+					response.send(StatusBadRequest, err)
 					return
 				}
 
 				if !info.IsDir() {
-					response.write(StatusUnprocessableContent, ErrorTargetNotDirectory)
+					response.send(StatusUnprocessableContent, ErrorTargetNotDirectory)
 					return
 				}
 
@@ -97,32 +97,32 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				info, err := os.Stat(file)
 				if err != nil {
-					response.write(StatusBadRequest, err)
+					response.send(StatusBadRequest, err)
 					return
 				}
 
 				if info.IsDir() {
-					response.write(StatusUnprocessableContent, ErrorTargetNotFile)
+					response.send(StatusUnprocessableContent, ErrorTargetNotFile)
 					return
 				}
 
 				arguments = append(arguments, file)
 			case "o|":
 				if !slices.Contains(options, v[2:]) {
-					response.write(StatusUnprocessableContent, ErrorOptionNotFound)
+					response.send(StatusUnprocessableContent, ErrorOptionNotFound)
 					return
 				}
 
 				arguments = append(arguments, v[2:])
 			case "t|":
 				if !strings.HasPrefix(v[2:], "'") || !strings.HasSuffix(v[2:], "'") {
-					response.write(StatusUnprocessableContent, ErrorTextInvalid)
+					response.send(StatusUnprocessableContent, ErrorTextInvalid)
 					return
 				}
 
 				arguments = append(arguments, v[2:])
 			default:
-				response.write(StatusUnprocessableContent, ErrorArgumentsInvalid)
+				response.send(StatusUnprocessableContent, ErrorArgumentsInvalid)
 				return
 			}
 		}
@@ -143,7 +143,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = command.Run()
 	if err != nil {
-		response.write(StatusBadRequest, err)
+		response.send(StatusBadRequest, err)
 		return
 	}
 }

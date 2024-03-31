@@ -25,7 +25,7 @@ type Response struct {
 	writer  http.ResponseWriter
 }
 
-func (r *Response) write(c int, e error) {
+func (r *Response) send(c int, e error) {
 	if c == StatusMethodNotAllowed {
 		allow := strings.Join(r.methods, ",")
 		r.writer.Header().Set("Allow", allow)

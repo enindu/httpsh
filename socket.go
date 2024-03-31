@@ -15,7 +15,6 @@
 package wsh
 
 import (
-	"fmt"
 	"log"
 	"net"
 )
@@ -31,12 +30,12 @@ func (s *Socket) Listen() (*net.TCPListener, error) {
 	address := net.JoinHostPort(s.Host, s.Port)
 	tcpAddress, err := net.ResolveTCPAddr(s.Network, address)
 	if err != nil {
-		return nil, fmt.Errorf("listener: %w", err)
+		return nil, err
 	}
 
 	tcpListener, err := net.ListenTCP(s.Network, tcpAddress)
 	if err != nil {
-		return nil, fmt.Errorf("listener: %w", err)
+		return nil, err
 	}
 
 	s.Log.Println("socket is listening on", address)

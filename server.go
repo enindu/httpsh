@@ -49,18 +49,24 @@ func (s *Server) Run() error {
 
 	go server.Serve(s.Listener)
 
+	s.wait()
+	return s.stop(server)
+}
+
+func (s *Server) wait() {
 	wait := make(chan os.Signal, 1)
 
 	signal.Notify(wait, syscall.SIGINT)
-
 	<-wait
+}
 
+func (s *Server) stop(se *http.Server) error {
 	parent := context.Background()
 	stop, cancel := context.WithTimeout(parent, time.Minute)
 
 	defer cancel()
 
-	err := server.Shutdown(stop)
+	err := se.Shutdown(stop)
 	if err != nil {
 		return err
 	}

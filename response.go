@@ -44,11 +44,11 @@ func (r *Response) write(c int, e error) (int, error) {
 	return r.responseWriter.Write([]byte(body))
 }
 
-func (r *Response) copy(i *io.PipeReader) (int64, error) {
-	length, err := io.Copy(r.responseWriter, i)
+func (r *Response) copy(reader *io.PipeReader) (int64, error) {
+	length, err := io.Copy(r.responseWriter, reader)
 	if err != nil {
-		return 0, err
+		return length, err
 	}
 
-	return length, i.Close()
+	return length, reader.Close()
 }

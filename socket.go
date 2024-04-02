@@ -15,7 +15,7 @@
 package httpsh
 
 import (
-	"log"
+	"log/slog"
 	"net"
 )
 
@@ -23,7 +23,7 @@ type Socket struct {
 	Network string
 	Host    string
 	Port    string
-	Log     *log.Logger
+	Log     *slog.Logger
 }
 
 func (s *Socket) Listen() (*net.TCPListener, error) {
@@ -37,6 +37,6 @@ func (s *Socket) Listen() (*net.TCPListener, error) {
 		return nil, err
 	}
 
-	s.Log.Printf("%q socket is listening on %q", s.Network, address)
+	s.Log.Info("listen socket", "network", s.Network, "address", address)
 	return listener, nil
 }

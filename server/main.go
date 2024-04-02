@@ -15,14 +15,14 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/enindu/httpsh"
 	"github.com/spf13/viper"
 )
 
 func main() {
-	logger := log.Default()
+	logger := slog.Default()
 	socket := &httpsh.Socket{
 		Network: viper.GetString("network"),
 		Host:    viper.GetString("host"),
@@ -32,7 +32,7 @@ func main() {
 
 	listener, err := socket.Listen()
 	if err != nil {
-		log.Printf("%v", err)
+		logger.Error(err.Error())
 		return
 	}
 
@@ -57,7 +57,7 @@ func main() {
 
 	err = server.Run()
 	if err != nil {
-		logger.Printf("%v", err)
+		logger.Error(err.Error())
 		return
 	}
 }

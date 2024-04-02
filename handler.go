@@ -17,7 +17,7 @@ package httpsh
 import (
 	"bytes"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -32,7 +32,7 @@ type Handler struct {
 	Mime        string
 	Methods     []string
 	Executables map[string][]string
-	Log         *log.Logger
+	Log         *slog.Logger
 	mutex       sync.Mutex
 }
 

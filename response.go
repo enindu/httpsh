@@ -15,7 +15,7 @@
 package httpsh
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -25,7 +25,7 @@ type Response struct {
 	request *http.Request
 	mime    string
 	methods []string
-	log     *log.Logger
+	log     *slog.Logger
 }
 
 func (r *Response) error(c int, e error) (int, error) {
@@ -33,7 +33,7 @@ func (r *Response) error(c int, e error) (int, error) {
 		e = errUnknown
 	}
 
-	r.log.Printf("%q %q", r.request.RemoteAddr, r.request.RequestURI)
+	r.log.Error("invalid request", "address", r.request.RemoteAddr, "uri", r.request.RequestURI)
 	return r.write(c, e.Error())
 }
 

@@ -17,7 +17,7 @@ package httpsh
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -32,7 +32,7 @@ type Server struct {
 	Read     int
 	Write    int
 	Idle     int
-	Log      *log.Logger
+	Log      *slog.Logger
 }
 
 func (s *Server) Run() error {
@@ -42,12 +42,12 @@ func (s *Server) Run() error {
 		ReadHeaderTimeout: 0,
 		WriteTimeout:      time.Duration(s.Write) * time.Second,
 		IdleTimeout:       time.Duration(s.Idle) * time.Second,
-		ErrorLog:          s.Log,
+		ErrorLog:          slog.NewLogLogger(slog.Default().Handler(), slog.LevelError),
 	}
 
 	go server.Serve(s.Listener)
 
-	s.Log.Printf("server is started")
+	s.Log.Info("start server")
 	s.wait()
 	return s.stop(server)
 }
@@ -70,6 +70,6 @@ func (s *Server) stop(server *http.Server) error {
 		return err
 	}
 
-	s.Log.Printf("server is stopped")
+	s.Log.Info("stop server")
 	return nil
 }

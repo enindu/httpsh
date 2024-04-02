@@ -37,6 +37,6 @@ func (s *Socket) Listen() (*net.TCPListener, error) {
 		return nil, err
 	}
 
-	s.Log.Info("listen socket", "network", s.Network, "address", address)
+	s.Log.Info("listen socket", "network", s.Network, "host", s.Host, "port", s.Port)
 	return listener, nil
 }

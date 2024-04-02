@@ -1,4 +1,4 @@
-module github.com/enindu/wsh
+module github.com/enindu/httpsh
 
 go 1.22.1
 

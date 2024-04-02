@@ -15,7 +15,8 @@
 package wsh
 
 import (
-	"io"
+	"bytes"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -46,130 +47,137 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err := os.Chdir(h.Directory)
 	if err != nil {
-		response.write(http.StatusBadRequest, err)
-
+		response.error(http.StatusBadRequest, errChangeDirectory)
 		return
 	}
 
 	if !slices.Contains(h.Methods, r.Method) {
-		response.write(http.StatusMethodNotAllowed, ErrMethodNotAllowed)
-
+		response.error(http.StatusMethodNotAllowed, errMethodNotAllowed)
 		return
 	}
 
 	if r.URL.Path != "/" {
-		response.write(http.StatusForbidden, ErrAccessDenied)
-
+		response.error(http.StatusForbidden, errAccessDenied)
 		return
 	}
 
 	queries := r.URL.Query()
 	if len(queries) < 1 {
-		response.write(http.StatusBadRequest, ErrQueryInvalid)
-
+		response.error(http.StatusBadRequest, errQueryInvalid)
 		return
 	}
 
 	executable, options, err := h.program(queries)
 	if err != nil {
-		response.write(http.StatusBadRequest, err)
-
+		response.error(http.StatusBadRequest, err)
 		return
 	}
 
 	arguments, err := h.arguments(queries, options)
 	if err != nil {
-		response.write(http.StatusBadRequest, err)
-
+		response.error(http.StatusBadRequest, err)
 		return
 	}
 
 	line := h.line(executable, arguments)
-	reader, writer := io.Pipe()
+	stdout, stderr, err := h.command(line)
+	if err != nil {
+		response.error(http.StatusBadRequest, errors.New(stderr))
+		return
+	}
 
-	defer writer.Close()
+	response.write(http.StatusOK, stdout)
+}
 
-	command := exec.Command("sh", "-c", line)
-	command.Stdout = writer
-	command.Stderr = writer
+func (h *Handler) command(l string) (string, string, error) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
-	go response.copy(reader)
+	stdout := &bytes.Buffer{}
+	defer stdout.Reset()
 
-	command.Run()
+	stderr := &bytes.Buffer{}
+	defer stderr.Reset()
+
+	command := exec.Command("sh", "-c", l)
+	command.Stdout = stdout
+	command.Stderr = stderr
+
+	err := command.Run()
+	if err != nil {
+		return "", stderr.String(), err
+	}
+
+	return stdout.String(), "", nil
 }
 
 func (h *Handler) line(e string, a []string) string {
 	h.mutex.Lock()
-
 	defer h.mutex.Unlock()
 
-	builder := strings.Builder{}
+	buffer := bytes.Buffer{}
+	defer buffer.Reset()
 
-	defer builder.Reset()
-
-	builder.WriteString(e)
-	builder.WriteString(" ")
+	buffer.WriteString(e)
+	buffer.WriteString(" ")
 
 	for _, v := range a {
-		builder.WriteString(v)
-		builder.WriteString(" ")
+		buffer.WriteString(v)
+		buffer.WriteString(" ")
 	}
 
-	return builder.String()
+	return buffer.String()
 }
 
 func (h *Handler) arguments(q map[string][]string, o []string) (a []string, e error) {
 	h.mutex.Lock()
-
 	defer h.mutex.Unlock()
 
 	if len(q["a"]) > 0 {
 		for _, v := range q["a"] {
 			if len(v) < 3 {
-				return nil, ErrArgumentsInvalid
+				return nil, errArgumentsInvalid
 			}
 
 			switch v[:2] {
 			case "d_":
 				directory := filepath.Join("./", v[2:])
-
 				info, err := os.Stat(directory)
 				if err != nil {
-					return nil, err
+					return nil, errTargetNotFound
 				}
 
 				if !info.IsDir() {
-					return nil, ErrTargetNotDirectory
+					return nil, errTargetNotDirectory
 				}
 
 				a = append(a, directory)
 			case "f_":
 				file := filepath.Join("./", v[2:])
-
 				info, err := os.Stat(file)
 				if err != nil {
-					return nil, err
+					return nil, errTargetNotFound
 				}
 
 				if info.IsDir() {
-					return nil, ErrTargetNotFile
+					return nil, errTargetNotFile
 				}
 
 				a = append(a, file)
 			case "o_":
 				if !slices.Contains(o, v[2:]) {
-					return nil, ErrOptionNotFound
+					return nil, errOptionNotFound
 				}
 
 				a = append(a, v[2:])
 			case "t_":
 				if !strings.HasPrefix(v[2:], "'") || !strings.HasSuffix(v[2:], "'") {
-					return nil, ErrTextInvalid
+					return nil, errTextInvalid
 				}
 
 				a = append(a, v[2:])
 			default:
-				return nil, ErrArgumentsInvalid
+				return nil, errArgumentsInvalid
 			}
 		}
 	}
@@ -179,16 +187,15 @@ func (h *Handler) arguments(q map[string][]string, o []string) (a []string, e er
 
 func (h *Handler) program(q map[string][]string) (string, []string, error) {
 	h.mutex.Lock()
-
 	defer h.mutex.Unlock()
 
 	if len(q["e"]) != 1 {
-		return "", nil, ErrOneExecutableAllowed
+		return "", nil, errOneExecutableAllowed
 	}
 
 	options, ok := h.Executables[q["e"][0]]
 	if !ok {
-		return "", nil, ErrExecutableNotFound
+		return "", nil, errExecutableNotFound
 	}
 
 	return q["e"][0], options, nil

@@ -15,7 +15,6 @@
 package wsh
 
 import (
-	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -29,27 +28,21 @@ type Response struct {
 	log     *log.Logger
 }
 
-func (r *Response) write(c int, e error) (int, error) {
-	if c == http.StatusMethodNotAllowed {
-		allow := strings.Join(r.methods, ",")
-
-		r.writer.Header().Set("Allow", allow)
+func (r *Response) error(c int, e error) (int, error) {
+	if e.Error() == "" {
+		e = errUnknown
 	}
 
-	body := e.Error()
-
-	r.log.Println(r.request.RemoteAddr, r.request.RequestURI, body)
-	r.writer.Header().Set("Content-Type", r.mime)
-	r.writer.WriteHeader(c)
-
-	return r.writer.Write([]byte(body))
+	r.log.Printf("%q %q", r.request.RemoteAddr, r.request.RequestURI)
+	return r.write(c, e.Error())
 }
 
-func (r *Response) copy(reader *io.PipeReader) (int64, error) {
-	length, err := io.Copy(r.writer, reader)
-	if err != nil {
-		return length, err
+func (r *Response) write(c int, s string) (int, error) {
+	if c == http.StatusMethodNotAllowed {
+		r.writer.Header().Set("Allow", strings.Join(r.methods, ", "))
 	}
 
-	return length, reader.Close()
+	r.writer.Header().Set("Content-Type", r.mime)
+	r.writer.WriteHeader(c)
+	return r.writer.Write([]byte(s))
 }

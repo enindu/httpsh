@@ -15,7 +15,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/enindu/wsh"
@@ -24,7 +23,6 @@ import (
 
 func main() {
 	logger := log.Default()
-
 	socket := &wsh.Socket{
 		Network: viper.GetString("network"),
 		Host:    viper.GetString("host"),
@@ -34,8 +32,7 @@ func main() {
 
 	listener, err := socket.Listen()
 	if err != nil {
-		fmt.Printf("\r%v\n", err)
-
+		log.Printf("%v", err)
 		return
 	}
 
@@ -60,8 +57,7 @@ func main() {
 
 	err = server.Run()
 	if err != nil {
-		fmt.Printf("\r%v\n", err)
-
+		logger.Printf("%v", err)
 		return
 	}
 }

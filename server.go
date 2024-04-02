@@ -45,12 +45,10 @@ func (s *Server) Run() error {
 		ErrorLog:          s.Log,
 	}
 
-	s.Log.Println("server is started")
-
 	go server.Serve(s.Listener)
 
+	s.Log.Printf("server is started")
 	s.wait()
-
 	return s.stop(server)
 }
 
@@ -58,23 +56,20 @@ func (s *Server) wait() {
 	wait := make(chan os.Signal, 1)
 
 	signal.Notify(wait, syscall.SIGINT)
-
 	<-wait
+
+	fmt.Printf("\r")
 }
 
-func (s *Server) stop(se *http.Server) error {
-	parent := context.Background()
-	stop, cancel := context.WithTimeout(parent, time.Minute)
-
+func (s *Server) stop(server *http.Server) error {
+	stop, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	err := se.Shutdown(stop)
+	err := server.Shutdown(stop)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("\r")
-	s.Log.Println("server is stopped")
-
+	s.Log.Printf("server is stopped")
 	return nil
 }

@@ -27,12 +27,14 @@ import (
 )
 
 type Server struct {
-	Listener *net.TCPListener
-	Handler  *Handler
-	Read     int
-	Write    int
-	Idle     int
-	Log      *slog.Logger
+	Listener    *net.TCPListener
+	Handler     *Handler
+	Read        int
+	Write       int
+	Idle        int
+	Certificate string
+	Key         string
+	Log         *slog.Logger
 }
 
 func (s *Server) Run() error {
@@ -42,12 +44,17 @@ func (s *Server) Run() error {
 		ReadHeaderTimeout: 0,
 		WriteTimeout:      time.Duration(s.Write) * time.Second,
 		IdleTimeout:       time.Duration(s.Idle) * time.Second,
-		ErrorLog:          slog.NewLogLogger(slog.Default().Handler(), slog.LevelError),
+		ErrorLog:          slog.NewLogLogger(s.Log.Handler(), slog.LevelError),
 	}
 
-	go server.Serve(s.Listener)
+	go func() {
+		err := server.ServeTLS(s.Listener, s.Certificate, s.Key)
+		if err != nil {
+			s.Log.Error("server.run", "message", err)
+		}
+	}()
 
-	s.Log.Info("start server")
+	s.Log.Info("server.run")
 	s.wait()
 	return s.stop(server)
 }
@@ -56,6 +63,8 @@ func (s *Server) wait() {
 	wait := make(chan os.Signal, 1)
 
 	signal.Notify(wait, syscall.SIGINT)
+	s.Log.Info("server.wait")
+
 	<-wait
 
 	fmt.Printf("\r")
@@ -70,6 +79,6 @@ func (s *Server) stop(server *http.Server) error {
 		return err
 	}
 
-	s.Log.Info("stop server")
+	s.Log.Info("server.stop")
 	return nil
 }

@@ -32,7 +32,7 @@ func main() {
 
 	listener, err := socket.Listen()
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("main", "message", err.Error())
 		return
 	}
 
@@ -47,17 +47,19 @@ func main() {
 	}
 
 	server := &httpsh.Server{
-		Listener: listener,
-		Handler:  handler,
-		Read:     viper.GetInt("read"),
-		Write:    viper.GetInt("write"),
-		Idle:     viper.GetInt("idle"),
-		Log:      logger,
+		Listener:    listener,
+		Handler:     handler,
+		Read:        viper.GetInt("read"),
+		Write:       viper.GetInt("write"),
+		Idle:        viper.GetInt("idle"),
+		Certificate: viper.GetString("certificate"),
+		Key:         viper.GetString("key"),
+		Log:         logger,
 	}
 
 	err = server.Run()
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("main", "message", err.Error())
 		return
 	}
 }

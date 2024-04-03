@@ -38,7 +38,7 @@ var (
 
 func init() {
 	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
+	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$HOME/.httpsh/")
 	viper.AddConfigPath(".")
 

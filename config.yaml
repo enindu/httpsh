@@ -21,5 +21,6 @@ executables:
 read: 5
 write: 5
 idle: 60
-certificate: ssl/server.crt
-key: ssl/server.key
+ca_certificate: ssl/ca_certs/ca.crt
+server_certificate: ssl/server_certs/server.crt
+server_key: ssl/server_certs/server.key

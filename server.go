@@ -16,6 +16,8 @@ package httpsh
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -29,6 +31,7 @@ import (
 type Server struct {
 	Listener    *net.TCPListener
 	Handler     *Handler
+	Config      *tls.Config
 	Read        int
 	Write       int
 	Idle        int
@@ -40,6 +43,7 @@ type Server struct {
 func (s *Server) Run() error {
 	server := &http.Server{
 		Handler:           s.Handler,
+		TLSConfig:         s.Config,
 		ReadTimeout:       time.Duration(s.Read) * time.Second,
 		ReadHeaderTimeout: 0,
 		WriteTimeout:      time.Duration(s.Write) * time.Second,
@@ -49,7 +53,7 @@ func (s *Server) Run() error {
 
 	go func() {
 		err := server.ServeTLS(s.Listener, s.Certificate, s.Key)
-		if err != nil {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.Log.Error("server.run", "message", err)
 		}
 	}()

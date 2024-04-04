@@ -15,7 +15,10 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"log/slog"
+	"os"
 
 	"github.com/enindu/httpsh"
 	"github.com/spf13/viper"
@@ -46,14 +49,34 @@ func main() {
 		Log:         logger,
 	}
 
+	caCertificate, err := os.ReadFile(viper.GetString("ca_certificate"))
+	if err != nil {
+		logger.Error("main", "message", err.Error())
+		return
+	}
+
+	caPool := x509.NewCertPool()
+	caPool.AppendCertsFromPEM(caCertificate)
+
+	config := &tls.Config{
+		RootCAs:            caPool,
+		ServerName:         viper.GetString("host"),
+		ClientAuth:         tls.RequireAndVerifyClientCert,
+		ClientCAs:          caPool,
+		ClientSessionCache: tls.NewLRUClientSessionCache(10),
+		MinVersion:         tls.VersionTLS13,
+		MaxVersion:         tls.VersionTLS13,
+	}
+
 	server := &httpsh.Server{
 		Listener:    listener,
 		Handler:     handler,
+		Config:      config,
 		Read:        viper.GetInt("read"),
 		Write:       viper.GetInt("write"),
 		Idle:        viper.GetInt("idle"),
-		Certificate: viper.GetString("certificate"),
-		Key:         viper.GetString("key"),
+		Certificate: viper.GetString("server_certificate"),
+		Key:         viper.GetString("server_key"),
 		Log:         logger,
 	}
 

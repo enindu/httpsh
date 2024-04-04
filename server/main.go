@@ -49,20 +49,20 @@ func main() {
 		Log:         logger,
 	}
 
-	caCertificate, err := os.ReadFile(viper.GetString("ca_certificate"))
+	ca, err := os.ReadFile(viper.GetString("ca"))
 	if err != nil {
 		logger.Error("main", "message", err.Error())
 		return
 	}
 
-	caPool := x509.NewCertPool()
-	caPool.AppendCertsFromPEM(caCertificate)
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM(ca)
 
 	config := &tls.Config{
-		RootCAs:            caPool,
+		RootCAs:            pool,
 		ServerName:         viper.GetString("host"),
 		ClientAuth:         tls.RequireAndVerifyClientCert,
-		ClientCAs:          caPool,
+		ClientCAs:          pool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(10),
 		MinVersion:         tls.VersionTLS13,
 		MaxVersion:         tls.VersionTLS13,
@@ -75,8 +75,8 @@ func main() {
 		Read:        viper.GetInt("read"),
 		Write:       viper.GetInt("write"),
 		Idle:        viper.GetInt("idle"),
-		Certificate: viper.GetString("server_certificate"),
-		Key:         viper.GetString("server_key"),
+		Certificate: viper.GetString("certificate"),
+		Key:         viper.GetString("key"),
 		Log:         logger,
 	}
 

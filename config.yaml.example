@@ -4,7 +4,7 @@ host: 127.0.0.1
 port: 5000
 
 # Handler configurations
-directory: .
+directory: /path/to/directory/
 mime: text/plain; charset=UTF-8
 methods:
   - GET
@@ -21,6 +21,6 @@ executables:
 read: 5
 write: 5
 idle: 60
-ca: ssl/ca_certs/ca.crt
-certificate: ssl/server_certs/server.crt
-key: ssl/server_certs/server.key
+ca: /path/to/ca.crt
+certificate: /path/to/server.crt
+key: /path/to/server.key

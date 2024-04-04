@@ -1,3 +1,4 @@
 ssl/ca_certs/*
 ssl/client_certs/*
 ssl/server_certs/*
+config.yaml

@@ -25,17 +25,17 @@ import (
 )
 
 func main() {
-	logger := slog.Default()
+	log := slog.Default()
 	socket := &httpsh.Socket{
 		Network: viper.GetString("network"),
 		Host:    viper.GetString("host"),
 		Port:    viper.GetString("port"),
-		Log:     logger,
+		Log:     log,
 	}
 
 	listener, err := socket.Listen()
 	if err != nil {
-		logger.Error("main", "message", err.Error())
+		log.Error("main", "message", err.Error())
 		return
 	}
 
@@ -46,12 +46,12 @@ func main() {
 		Mime:        viper.GetString("mime"),
 		Methods:     viper.GetStringSlice("methods"),
 		Executables: viper.GetStringMapStringSlice("executables"),
-		Log:         logger,
+		Log:         log,
 	}
 
 	ca, err := os.ReadFile(viper.GetString("ca"))
 	if err != nil {
-		logger.Error("main", "message", err.Error())
+		log.Error("main", "message", err.Error())
 		return
 	}
 
@@ -77,12 +77,12 @@ func main() {
 		Idle:        viper.GetInt("idle"),
 		Certificate: viper.GetString("certificate"),
 		Key:         viper.GetString("key"),
-		Log:         logger,
+		Log:         log,
 	}
 
 	err = server.Run()
 	if err != nil {
-		logger.Error("main", "message", err.Error())
+		log.Error("main", "message", err.Error())
 		return
 	}
 }

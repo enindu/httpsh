@@ -1,0 +1,23 @@
+server:
+  network: tcp
+  host: 127.0.0.1
+  port: 5000
+  domain: localhost
+  read_timeout: 5
+  write_timeout: 5
+  idle_timeout: 60
+  ca_certificate: /path/to/ca/certificate.pem
+  server_certificate: /path/to/server/certificate.pem
+  server_key: /path/to/server/key.pem
+  directory: /path/to/directory/
+  mime: text/plain; charset=UTF-8
+  methods:
+    - GET
+    - HEAD
+  executables:
+    cat:
+      - --help
+    grep:
+      - --help
+    ls:
+      - --help

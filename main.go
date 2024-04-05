@@ -14,11 +14,7 @@
 
 package httpsh
 
-import (
-	"errors"
-
-	"github.com/spf13/viper"
-)
+import "errors"
 
 var (
 	errChangeDirectory      error = errors.New("can not change directory")
@@ -35,15 +31,3 @@ var (
 	errTextInvalid          error = errors.New("text is invalid")
 	errUnknown              error = errors.New("unknown error")
 )
-
-func init() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.httpsh/")
-	viper.AddConfigPath(".")
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(err)
-	}
-}

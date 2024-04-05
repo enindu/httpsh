@@ -29,25 +29,25 @@ import (
 )
 
 type Server struct {
-	Listener    *net.TCPListener
-	Handler     *Handler
-	Config      *tls.Config
-	Read        int
-	Write       int
-	Idle        int
-	Certificate string
-	Key         string
-	Log         *slog.Logger
+	Listener     *net.TCPListener
+	Handler      *Handler
+	TLS          *tls.Config
+	ReadTimeout  int
+	WriteTimeout int
+	IdleTimeout  int
+	Certificate  string
+	Key          string
+	Log          *slog.Logger
 }
 
 func (s *Server) Run() error {
 	server := &http.Server{
 		Handler:           s.Handler,
-		TLSConfig:         s.Config,
-		ReadTimeout:       time.Duration(s.Read) * time.Second,
+		TLSConfig:         s.TLS,
+		ReadTimeout:       time.Duration(s.ReadTimeout) * time.Second,
 		ReadHeaderTimeout: 0,
-		WriteTimeout:      time.Duration(s.Write) * time.Second,
-		IdleTimeout:       time.Duration(s.Idle) * time.Second,
+		WriteTimeout:      time.Duration(s.WriteTimeout) * time.Second,
+		IdleTimeout:       time.Duration(s.IdleTimeout) * time.Second,
 		ErrorLog:          slog.NewLogLogger(s.Log.Handler(), slog.LevelError),
 	}
 

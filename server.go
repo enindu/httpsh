@@ -35,8 +35,8 @@ type Server struct {
 	ReadTimeout  int
 	WriteTimeout int
 	IdleTimeout  int
-	Certificate  string
 	Key          string
+	Certificate  string
 	Log          *slog.Logger
 }
 

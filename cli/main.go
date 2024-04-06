@@ -15,12 +15,20 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 
 	"github.com/spf13/viper"
 )
 
+var (
+	createCACertificates *bool = flag.Bool("create-ca-certificates", false, "Create CA certificates")
+	runServer            *bool = flag.Bool("run-server", false, "Run server")
+)
+
 func main() {
+	flag.Parse()
+
 	log := slog.Default()
 
 	viper.SetConfigName("config")
@@ -34,27 +42,51 @@ func main() {
 		return
 	}
 
-	server := &Server{
-		network:           viper.GetString("server.network"),
-		host:              viper.GetString("server.host"),
-		port:              viper.GetString("server.port"),
-		domain:            viper.GetString("server.domain"),
-		readTimeout:       viper.GetInt("server.read_timeout"),
-		writeTimeout:      viper.GetInt("server.write_timeout"),
-		idleTimeout:       viper.GetInt("server.idle_timeout"),
-		caCertificate:     viper.GetString("server.ca_certificate"),
-		serverCertificate: viper.GetString("server.server_certificate"),
-		serverKey:         viper.GetString("server.server_key"),
-		directory:         viper.GetString("server.directory"),
-		mime:              viper.GetString("server.mime"),
-		methods:           viper.GetStringSlice("server.methods"),
-		executables:       viper.GetStringMapStringSlice("server.executables"),
-		log:               log,
-	}
+	switch {
+	case *createCACertificates:
+		ca := &CA{
+			bits:        viper.GetInt("ca.bits"),
+			years:       viper.GetInt("ca.years"),
+			months:      viper.GetInt("ca.months"),
+			days:        viper.GetInt("ca.days"),
+			key:         viper.GetString("ca.key"),
+			certificate: viper.GetString("ca.certificate"),
+		}
 
-	err = server.run()
-	if err != nil {
-		log.Error("main", "message", err)
+		err := ca.generate()
+		if err != nil {
+			log.Error("main", "message", err)
+			return
+		}
+
 		return
+	case *runServer:
+		server := &Server{
+			network:           viper.GetString("server.network"),
+			host:              viper.GetString("server.host"),
+			port:              viper.GetString("server.port"),
+			domain:            viper.GetString("server.domain"),
+			readTimeout:       viper.GetInt("server.read_timeout"),
+			writeTimeout:      viper.GetInt("server.write_timeout"),
+			idleTimeout:       viper.GetInt("server.idle_timeout"),
+			caCertificate:     viper.GetString("server.ca_certificate"),
+			serverKey:         viper.GetString("server.server_key"),
+			serverCertificate: viper.GetString("server.server_certificate"),
+			directory:         viper.GetString("server.directory"),
+			mime:              viper.GetString("server.mime"),
+			methods:           viper.GetStringSlice("server.methods"),
+			executables:       viper.GetStringMapStringSlice("server.executables"),
+			log:               log,
+		}
+
+		err = server.run()
+		if err != nil {
+			log.Error("main", "message", err)
+			return
+		}
+
+		return
+	default:
+		flag.PrintDefaults()
 	}
 }

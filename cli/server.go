@@ -32,8 +32,8 @@ type Server struct {
 	writeTimeout      int
 	idleTimeout       int
 	caCertificate     string
-	serverCertificate string
 	serverKey         string
+	serverCertificate string
 	directory         string
 	mime              string
 	methods           []string
@@ -90,8 +90,8 @@ func (s *Server) run() error {
 		ReadTimeout:  s.readTimeout,
 		WriteTimeout: s.writeTimeout,
 		IdleTimeout:  s.idleTimeout,
-		Certificate:  s.serverCertificate,
 		Key:          s.serverKey,
+		Certificate:  s.serverCertificate,
 		Log:          s.log,
 	}
 

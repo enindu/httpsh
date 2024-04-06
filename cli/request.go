@@ -17,21 +17,25 @@ package main
 import (
 	"crypto/x509"
 	"math/big"
+	"net"
 	"strconv"
 	"time"
 )
 
-type CA struct {
+type Request struct {
 	bits        int
 	years       int
 	months      int
 	days        int
+	domains     []string
+	emails      []string
+	ips         []string
 	key         string
 	certificate string
 }
 
-func (c *CA) generate() (*Bundle, error) {
-	private, public, err := key(c.bits, c.key)
+func (r *Request) generate(b *Bundle) (*Bundle, error) {
+	private, public, err := key(r.bits, r.key)
 	if err != nil {
 		return nil, err
 	}
@@ -41,17 +45,24 @@ func (c *CA) generate() (*Bundle, error) {
 		return nil, err
 	}
 
-	template := &x509.Certificate{
-		SignatureAlgorithm:    x509.SHA512WithRSA,
-		SerialNumber:          big.NewInt(serial),
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(c.years, c.months, c.days),
-		KeyUsage:              x509.KeyUsageCertSign,
-		BasicConstraintsValid: true,
-		IsCA:                  true,
+	ips := []net.IP{}
+	for _, v := range r.ips {
+		ips = append(ips, net.ParseIP(v))
 	}
 
-	certificate, err := certificate(c.certificate, template, template, public, private)
+	template := &x509.Certificate{
+		SignatureAlgorithm: x509.SHA512WithRSA,
+		SerialNumber:       big.NewInt(serial),
+		NotBefore:          time.Now(),
+		NotAfter:           time.Now().AddDate(r.years, r.months, r.days),
+		KeyUsage:           x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		DNSNames:           r.domains,
+		EmailAddresses:     r.emails,
+		IPAddresses:        ips,
+	}
+
+	certificate, err := certificate(r.certificate, template, b.certificate, b.public, b.private)
 	if err != nil {
 		return nil, err
 	}

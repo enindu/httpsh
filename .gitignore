@@ -1,2 +1,4 @@
 cli/certs/ca/*
+cli/certs/client/*
+cli/certs/server/*
 cli/config.yaml

@@ -1,11 +1,38 @@
-ca:
-  bits: 4096
-  years: 1
-  months: 0
-  days: 0
-  key_file: /path/to/ca/key.pem
-  certificate_file: &ca_certificate_file /path/to/ca/certificate.pem
-
+cert:
+  ca:
+    bits: 4096
+    years: 1
+    months: 0
+    days: 0
+    key: /path/to/ca/key.pem
+    certificate: /path/to/ca/certificate.pem
+  request:
+    server:
+      bits: 4096
+      years: 1
+      months: 0
+      days: 0
+      domains:
+        - localhost
+      emails:
+        - info@test.com
+      ips:
+        - 127.0.0.1
+      key: /path/to/server/key.pem
+      certificate: /path/to/server/certificate.pem
+    client:
+      bits: 4096
+      years: 1
+      months: 0
+      days: 0
+      domains:
+        - localhost
+      emails:
+        - info@test.com
+      ips:
+        - 127.0.0.1
+      key: /path/to/client/key.pem
+      certificate: /path/to/client/certificate.pem
 server:
   network: tcp
   host: 127.0.0.1
@@ -14,9 +41,9 @@ server:
   read_timeout: 5
   write_timeout: 5
   idle_timeout: 60
-  ca_certificate_file: *ca_certificate_file
-  server_key_file: /path/to/server/key.pem
-  server_certificate_file: /path/to/server/certificate.pem
+  ca_certificate: /path/to/ca/certificate.pem
+  server_key: /path/to/server/key.pem
+  server_certificate: /path/to/server/certificate.pem
   directory: /home/enindu/Work/Go/Self/httpsh/
   mime: text/plain; charset=UTF-8
   methods:

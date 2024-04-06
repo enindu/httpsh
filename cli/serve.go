@@ -24,21 +24,21 @@ import (
 )
 
 type Serve struct {
-	network           string
-	host              string
-	port              string
-	domain            string
-	readTimeout       int
-	writeTimeout      int
-	idleTimeout       int
-	caCertificate     string
-	serverKey         string
-	serverCertificate string
-	directory         string
-	mime              string
-	methods           []string
-	executables       map[string][]string
-	log               *slog.Logger
+	network               string
+	host                  string
+	port                  string
+	domain                string
+	readTimeout           int
+	writeTimeout          int
+	idleTimeout           int
+	caCertificateFile     string
+	serverKeyFile         string
+	serverCertificateFile string
+	directory             string
+	mime                  string
+	methods               []string
+	executables           map[string][]string
+	log                   *slog.Logger
 }
 
 func (s *Serve) run() error {
@@ -80,15 +80,15 @@ func (s *Serve) run() error {
 	}
 
 	server := &httpsh.Server{
-		Listener:     listener,
-		Handler:      handler,
-		TLS:          tls,
-		ReadTimeout:  s.readTimeout,
-		WriteTimeout: s.writeTimeout,
-		IdleTimeout:  s.idleTimeout,
-		Key:          s.serverKey,
-		Certificate:  s.serverCertificate,
-		Log:          s.log,
+		Listener:        listener,
+		Handler:         handler,
+		TLS:             tls,
+		ReadTimeout:     s.readTimeout,
+		WriteTimeout:    s.writeTimeout,
+		IdleTimeout:     s.idleTimeout,
+		KeyFile:         s.serverKeyFile,
+		CertificateFile: s.serverCertificateFile,
+		Log:             s.log,
 	}
 
 	err = server.Run()
@@ -100,7 +100,7 @@ func (s *Serve) run() error {
 }
 
 func (s *Serve) pool() (*x509.CertPool, error) {
-	certificate, err := os.ReadFile(s.caCertificate)
+	certificate, err := os.ReadFile(s.caCertificateFile)
 	if err != nil {
 		return nil, err
 	}

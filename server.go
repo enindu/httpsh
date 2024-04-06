@@ -29,15 +29,15 @@ import (
 )
 
 type Server struct {
-	Listener     *net.TCPListener
-	Handler      *Handler
-	TLS          *tls.Config
-	ReadTimeout  int
-	WriteTimeout int
-	IdleTimeout  int
-	Key          string
-	Certificate  string
-	Log          *slog.Logger
+	Listener        *net.TCPListener
+	Handler         *Handler
+	TLS             *tls.Config
+	ReadTimeout     int
+	WriteTimeout    int
+	IdleTimeout     int
+	KeyFile         string
+	CertificateFile string
+	Log             *slog.Logger
 }
 
 func (s *Server) Run() error {
@@ -52,7 +52,7 @@ func (s *Server) Run() error {
 	}
 
 	go func() {
-		err := server.ServeTLS(s.Listener, s.Certificate, s.Key)
+		err := server.ServeTLS(s.Listener, s.CertificateFile, s.KeyFile)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.Log.Error("server.run", "message", err)
 		}

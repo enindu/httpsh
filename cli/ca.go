@@ -26,24 +26,24 @@ import (
 )
 
 type CA struct {
-	bits        int
-	years       int
-	months      int
-	days        int
-	key         string
-	certificate string
+	bits            int
+	years           int
+	months          int
+	days            int
+	keyFile         string
+	certificateFile string
 }
 
 func (c *CA) generate() error {
-	private, public, err := c.generateKey()
+	private, public, err := c.key()
 	if err != nil {
 		return err
 	}
 
-	return c.generateCertificate(private, public)
+	return c.certificate(private, public)
 }
 
-func (c *CA) generateCertificate(private *rsa.PrivateKey, public *rsa.PublicKey) error {
+func (c *CA) certificate(private *rsa.PrivateKey, public *rsa.PublicKey) error {
 	serial, err := strconv.ParseInt(time.Now().Format("20060102150405"), 10, 0)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (c *CA) generateCertificate(private *rsa.PrivateKey, public *rsa.PublicKey)
 		return err
 	}
 
-	file, err := os.OpenFile(c.certificate, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(c.certificateFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -78,13 +78,13 @@ func (c *CA) generateCertificate(private *rsa.PrivateKey, public *rsa.PublicKey)
 	return pem.Encode(file, block)
 }
 
-func (c *CA) generateKey() (*rsa.PrivateKey, *rsa.PublicKey, error) {
+func (c *CA) key() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	key, err := rsa.GenerateKey(rand.Reader, c.bits)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	file, err := os.OpenFile(c.key, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(c.keyFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
 	if err != nil {
 		return nil, nil, err
 	}

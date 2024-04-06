@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	caCerts *bool = flag.Bool("ca-certs", false, "Create CA key and certificate")
-	serve   *bool = flag.Bool("serve", false, "Run server")
+	ca    *bool = flag.Bool("ca", false, "Create CA key and certificate")
+	serve *bool = flag.Bool("serve", false, "Run server")
 )
 
 func main() {
@@ -43,14 +43,14 @@ func main() {
 	}
 
 	switch {
-	case *caCerts:
+	case *ca:
 		ca := &CA{
-			bits:        viper.GetInt("ca.bits"),
-			years:       viper.GetInt("ca.years"),
-			months:      viper.GetInt("ca.months"),
-			days:        viper.GetInt("ca.days"),
-			key:         viper.GetString("ca.key"),
-			certificate: viper.GetString("ca.certificate"),
+			bits:            viper.GetInt("ca.bits"),
+			years:           viper.GetInt("ca.years"),
+			months:          viper.GetInt("ca.months"),
+			days:            viper.GetInt("ca.days"),
+			keyFile:         viper.GetString("ca.key_file"),
+			certificateFile: viper.GetString("ca.certificate_file"),
 		}
 
 		err := ca.generate()
@@ -60,21 +60,21 @@ func main() {
 		}
 	case *serve:
 		serve := &Serve{
-			network:           viper.GetString("server.network"),
-			host:              viper.GetString("server.host"),
-			port:              viper.GetString("server.port"),
-			domain:            viper.GetString("server.domain"),
-			readTimeout:       viper.GetInt("server.read_timeout"),
-			writeTimeout:      viper.GetInt("server.write_timeout"),
-			idleTimeout:       viper.GetInt("server.idle_timeout"),
-			caCertificate:     viper.GetString("server.ca_certificate"),
-			serverKey:         viper.GetString("server.server_key"),
-			serverCertificate: viper.GetString("server.server_certificate"),
-			directory:         viper.GetString("server.directory"),
-			mime:              viper.GetString("server.mime"),
-			methods:           viper.GetStringSlice("server.methods"),
-			executables:       viper.GetStringMapStringSlice("server.executables"),
-			log:               log,
+			network:               viper.GetString("server.network"),
+			host:                  viper.GetString("server.host"),
+			port:                  viper.GetString("server.port"),
+			domain:                viper.GetString("server.domain"),
+			readTimeout:           viper.GetInt("server.read_timeout"),
+			writeTimeout:          viper.GetInt("server.write_timeout"),
+			idleTimeout:           viper.GetInt("server.idle_timeout"),
+			caCertificateFile:     viper.GetString("server.ca_certificate_file"),
+			serverKeyFile:         viper.GetString("server.server_key_file"),
+			serverCertificateFile: viper.GetString("server.server_certificate_file"),
+			directory:             viper.GetString("server.directory"),
+			mime:                  viper.GetString("server.mime"),
+			methods:               viper.GetStringSlice("server.methods"),
+			executables:           viper.GetStringMapStringSlice("server.executables"),
+			log:                   log,
 		}
 
 		err = serve.run()

@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	createCACertificates *bool = flag.Bool("create-ca-certificates", false, "Create CA certificates")
-	runServer            *bool = flag.Bool("run-server", false, "Run server")
+	caCerts *bool = flag.Bool("ca-certs", false, "Create CA key and certificate")
+	serve   *bool = flag.Bool("serve", false, "Run server")
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 	}
 
 	switch {
-	case *createCACertificates:
+	case *caCerts:
 		ca := &CA{
 			bits:        viper.GetInt("ca.bits"),
 			years:       viper.GetInt("ca.years"),
@@ -60,7 +60,7 @@ func main() {
 		}
 
 		return
-	case *runServer:
+	case *serve:
 		server := &Server{
 			network:           viper.GetString("server.network"),
 			host:              viper.GetString("server.host"),

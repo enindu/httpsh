@@ -64,20 +64,16 @@ func (s *Server) run() error {
 		Log:         s.log,
 	}
 
-	caCertificate, err := os.ReadFile(s.caCertificate)
+	pool, err := s.caPool()
 	if err != nil {
 		return err
 	}
 
-	caPool := x509.NewCertPool()
-
-	caPool.AppendCertsFromPEM(caCertificate)
-
 	tls := &tls.Config{
-		RootCAs:            caPool,
+		RootCAs:            pool,
 		ServerName:         s.domain,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
-		ClientCAs:          caPool,
+		ClientCAs:          pool,
 		ClientSessionCache: tls.NewLRUClientSessionCache(10),
 		MinVersion:         tls.VersionTLS13,
 		MaxVersion:         tls.VersionTLS13,
@@ -101,4 +97,16 @@ func (s *Server) run() error {
 	}
 
 	return nil
+}
+
+func (s *Server) caPool() (*x509.CertPool, error) {
+	certificate, err := os.ReadFile(s.caCertificate)
+	if err != nil {
+		return nil, err
+	}
+
+	pool := x509.NewCertPool()
+
+	pool.AppendCertsFromPEM(certificate)
+	return pool, nil
 }

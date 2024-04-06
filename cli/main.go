@@ -58,10 +58,8 @@ func main() {
 			log.Error("main", "message", err)
 			return
 		}
-
-		return
 	case *serve:
-		server := &Server{
+		serve := &Serve{
 			network:           viper.GetString("server.network"),
 			host:              viper.GetString("server.host"),
 			port:              viper.GetString("server.port"),
@@ -79,13 +77,11 @@ func main() {
 			log:               log,
 		}
 
-		err = server.run()
+		err = serve.run()
 		if err != nil {
 			log.Error("main", "message", err)
 			return
 		}
-
-		return
 	default:
 		flag.PrintDefaults()
 	}

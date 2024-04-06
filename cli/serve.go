@@ -23,7 +23,7 @@ import (
 	"github.com/enindu/httpsh"
 )
 
-type Server struct {
+type Serve struct {
 	network           string
 	host              string
 	port              string
@@ -41,7 +41,7 @@ type Server struct {
 	log               *slog.Logger
 }
 
-func (s *Server) run() error {
+func (s *Serve) run() error {
 	socket := &httpsh.Socket{
 		Network: s.network,
 		Host:    s.host,
@@ -64,7 +64,7 @@ func (s *Server) run() error {
 		Log:         s.log,
 	}
 
-	pool, err := s.caPool()
+	pool, err := s.pool()
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (s *Server) run() error {
 	return nil
 }
 
-func (s *Server) caPool() (*x509.CertPool, error) {
+func (s *Serve) pool() (*x509.CertPool, error) {
 	certificate, err := os.ReadFile(s.caCertificate)
 	if err != nil {
 		return nil, err

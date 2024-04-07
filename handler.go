@@ -141,7 +141,7 @@ func (h *Handler) arguments(q map[string][]string, o []string) (a []string, e er
 
 			switch v[:2] {
 			case "d_":
-				directory := filepath.Join("./", v[2:])
+				directory := filepath.Join(h.Directory, v[2:])
 				info, err := os.Stat(directory)
 				if err != nil {
 					return nil, errTargetNotFound
@@ -153,7 +153,7 @@ func (h *Handler) arguments(q map[string][]string, o []string) (a []string, e er
 
 				a = append(a, directory)
 			case "f_":
-				file := filepath.Join("./", v[2:])
+				file := filepath.Join(h.Directory, v[2:])
 				info, err := os.Stat(file)
 				if err != nil {
 					return nil, errTargetNotFound

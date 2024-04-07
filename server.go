@@ -54,11 +54,11 @@ func (s *Server) Run() error {
 	go func() {
 		err := server.ServeTLS(s.Listener, s.Certificate, s.Key)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			s.Log.Error("server.run", "message", err)
+			s.Log.Error(err.Error())
 		}
 	}()
 
-	s.Log.Info("server.run")
+	s.Log.Info("server.run", "message", "server is running")
 	s.wait()
 	return s.stop(server)
 }
@@ -67,7 +67,7 @@ func (s *Server) wait() {
 	wait := make(chan os.Signal, 1)
 
 	signal.Notify(wait, syscall.SIGINT)
-	s.Log.Info("server.wait")
+	s.Log.Info("server.wait", "message", "server is waiting")
 
 	<-wait
 
@@ -83,6 +83,6 @@ func (s *Server) stop(server *http.Server) error {
 		return err
 	}
 
-	s.Log.Info("server.stop")
+	s.Log.Info("server.stop", "message", "server is stopped")
 	return nil
 }

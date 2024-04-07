@@ -16,22 +16,25 @@ package main
 
 import (
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"math/big"
-	"net"
 	"strconv"
 	"time"
 )
 
 type Request struct {
-	bits        int
-	years       int
-	months      int
-	days        int
-	domains     []string
-	emails      []string
-	ips         []string
-	key         string
-	certificate string
+	bits         int
+	country      []string
+	organization []string
+	unit         []string
+	locality     []string
+	province     []string
+	domain       string
+	years        int
+	months       int
+	days         int
+	key          string
+	certificate  string
 }
 
 func (r *Request) generate(b *Bundle) (*Bundle, error) {
@@ -45,24 +48,26 @@ func (r *Request) generate(b *Bundle) (*Bundle, error) {
 		return nil, err
 	}
 
-	ips := []net.IP{}
-	for _, v := range r.ips {
-		ips = append(ips, net.ParseIP(v))
+	subject := &pkix.Name{
+		Country:            r.country,
+		Organization:       r.organization,
+		OrganizationalUnit: r.unit,
+		Locality:           r.locality,
+		Province:           r.province,
+		CommonName:         r.domain,
 	}
 
 	template := &x509.Certificate{
-		SignatureAlgorithm: x509.SHA512WithRSA,
-		SerialNumber:       big.NewInt(serial),
-		NotBefore:          time.Now(),
-		NotAfter:           time.Now().AddDate(r.years, r.months, r.days),
-		KeyUsage:           x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		DNSNames:           r.domains,
-		EmailAddresses:     r.emails,
-		IPAddresses:        ips,
+		SerialNumber: big.NewInt(serial),
+		Issuer:       *b.issuer,
+		Subject:      *subject,
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().AddDate(r.years, r.months, r.days),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 	}
 
-	certificate, err := certificate(r.certificate, template, b.certificate, b.public, b.private)
+	certificate, err := certificate(r.certificate, template, b.certificate, public, b.private)
 	if err != nil {
 		return nil, err
 	}
@@ -71,5 +76,6 @@ func (r *Request) generate(b *Bundle) (*Bundle, error) {
 		private:     private,
 		public:      public,
 		certificate: certificate,
+		issuer:      b.issuer,
 	}, nil
 }

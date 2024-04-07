@@ -9,28 +9,38 @@ cert:
   request:
     server:
       bits: 4096
+      country:
+        - TC
+      organization:
+        - Test Organization
+      unit:
+        - Test Unit
+      locality:
+        - Test Locality
+      province:
+        - Test Province
+      domain: localhost
       years: 1
       months: 0
       days: 0
-      domains:
-        - localhost
-      emails:
-        - info@test.com
-      ips:
-        - 127.0.0.1
       key: /path/to/server/key.pem
       certificate: /path/to/server/certificate.pem
     client:
       bits: 4096
+      country:
+        - TC
+      organization:
+        - Test Organization
+      unit:
+        - Test Unit
+      locality:
+        - Test Locality
+      province:
+        - Test Province
+      domain: localhost
       years: 1
       months: 0
       days: 0
-      domains:
-        - localhost
-      emails:
-        - info@test.com
-      ips:
-        - 127.0.0.1
       key: /path/to/client/key.pem
       certificate: /path/to/client/certificate.pem
 server:

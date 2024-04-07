@@ -33,7 +33,7 @@ func (r *Response) error(c int, e error) (int, error) {
 		e = errUnknown
 	}
 
-	r.log.Error("response.error", "address", r.request.RemoteAddr, "protocol", r.request.Proto, "uri", r.request.RequestURI, "message", e.Error())
+	r.log.Error(e.Error(), "address", r.request.RemoteAddr, "protocol", r.request.Proto, "uri", r.request.RequestURI)
 	return r.write(c, e.Error())
 }
 

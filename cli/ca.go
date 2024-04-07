@@ -16,6 +16,7 @@ package main
 
 import (
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"math/big"
 	"strconv"
 	"time"
@@ -41,12 +42,21 @@ func (c *CA) generate() (*Bundle, error) {
 		return nil, err
 	}
 
+	name := &pkix.Name{
+		Country:            []string{"LK"},
+		Organization:       []string{"Enindu Alahapperuma"},
+		OrganizationalUnit: []string{"httpsh"},
+		Locality:           []string{"Colombo"},
+		Province:           []string{"Western Province"},
+	}
+
 	template := &x509.Certificate{
-		SignatureAlgorithm:    x509.SHA512WithRSA,
 		SerialNumber:          big.NewInt(serial),
+		Issuer:                *name,
+		Subject:               *name,
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(c.years, c.months, c.days),
-		KeyUsage:              x509.KeyUsageCertSign,
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 	}
@@ -60,5 +70,6 @@ func (c *CA) generate() (*Bundle, error) {
 		private:     private,
 		public:      public,
 		certificate: certificate,
+		issuer:      name,
 	}, nil
 }

@@ -15,8 +15,13 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"flag"
 	"log/slog"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -38,7 +43,7 @@ func main() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Error("main", "message", err)
+		log.Error(err.Error())
 		return
 	}
 
@@ -55,43 +60,49 @@ func main() {
 
 		bundle, err := ca.generate()
 		if err != nil {
-			log.Error("main", "message", err)
+			log.Error(err.Error())
 			return
 		}
 
 		server := &Request{
-			bits:        viper.GetInt("cert.request.server.bits"),
-			years:       viper.GetInt("cert.request.server.years"),
-			months:      viper.GetInt("cert.request.server.months"),
-			days:        viper.GetInt("cert.request.server.days"),
-			domains:     viper.GetStringSlice("cert.request.server.domains"),
-			emails:      viper.GetStringSlice("cert.request.server.emails"),
-			ips:         viper.GetStringSlice("cert.request.server.ips"),
-			key:         viper.GetString("cert.request.server.key"),
-			certificate: viper.GetString("cert.request.server.certificate"),
+			bits:         viper.GetInt("cert.request.server.bits"),
+			country:      viper.GetStringSlice("cert.request.server.country"),
+			organization: viper.GetStringSlice("cert.request.server.organization"),
+			unit:         viper.GetStringSlice("cert.request.server.unit"),
+			locality:     viper.GetStringSlice("cert.request.server.locality"),
+			province:     viper.GetStringSlice("cert.request.server.province"),
+			domain:       viper.GetString("cert.request.server.domain"),
+			years:        viper.GetInt("cert.request.server.years"),
+			months:       viper.GetInt("cert.request.server.months"),
+			days:         viper.GetInt("cert.request.server.days"),
+			key:          viper.GetString("cert.request.server.key"),
+			certificate:  viper.GetString("cert.request.server.certificate"),
 		}
 
 		_, err = server.generate(bundle)
 		if err != nil {
-			log.Error("main", "message", err)
+			log.Error(err.Error())
 			return
 		}
 
 		client := &Request{
-			bits:        viper.GetInt("cert.request.client.bits"),
-			years:       viper.GetInt("cert.request.client.years"),
-			months:      viper.GetInt("cert.request.client.months"),
-			days:        viper.GetInt("cert.request.client.days"),
-			domains:     viper.GetStringSlice("cert.request.client.domains"),
-			emails:      viper.GetStringSlice("cert.request.client.emails"),
-			ips:         viper.GetStringSlice("cert.request.client.ips"),
-			key:         viper.GetString("cert.request.client.key"),
-			certificate: viper.GetString("cert.request.client.certificate"),
+			bits:         viper.GetInt("cert.request.client.bits"),
+			country:      viper.GetStringSlice("cert.request.client.country"),
+			organization: viper.GetStringSlice("cert.request.client.organization"),
+			unit:         viper.GetStringSlice("cert.request.client.unit"),
+			locality:     viper.GetStringSlice("cert.request.client.locality"),
+			province:     viper.GetStringSlice("cert.request.client.province"),
+			domain:       viper.GetString("cert.request.client.domain"),
+			years:        viper.GetInt("cert.request.client.years"),
+			months:       viper.GetInt("cert.request.client.months"),
+			days:         viper.GetInt("cert.request.client.days"),
+			key:          viper.GetString("cert.request.client.key"),
+			certificate:  viper.GetString("cert.request.client.certificate"),
 		}
 
 		_, err = client.generate(bundle)
 		if err != nil {
-			log.Error("main", "message", err)
+			log.Error(err.Error())
 			return
 		}
 	case *server:
@@ -115,10 +126,62 @@ func main() {
 
 		err := server.run()
 		if err != nil {
-			log.Error("main", "message", err)
+			log.Error(err.Error())
 			return
 		}
 	default:
 		flag.PrintDefaults()
 	}
+}
+
+func certificate(f string, s *x509.Certificate, c *x509.Certificate, public *rsa.PublicKey, private *rsa.PrivateKey) (*x509.Certificate, error) {
+	certificate, err := x509.CreateCertificate(rand.Reader, s, c, public, private)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.OpenFile(f, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	block := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certificate,
+	}
+
+	err = pem.Encode(file, block)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+func key(b int, f string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+	key, err := rsa.GenerateKey(rand.Reader, b)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	file, err := os.OpenFile(f, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer file.Close()
+
+	block := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	}
+
+	err = pem.Encode(file, block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return key, &key.PublicKey, nil
 }

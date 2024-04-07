@@ -17,10 +17,12 @@ package main
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
 )
 
 type Bundle struct {
 	private     *rsa.PrivateKey
 	public      *rsa.PublicKey
 	certificate *x509.Certificate
+	issuer      *pkix.Name
 }

@@ -37,7 +37,7 @@ func main() {
 	log := slog.Default()
 
 	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	viper.SetConfigType("toml")
 	viper.AddConfigPath("$HOME/.config/httpsh/cli")
 	viper.AddConfigPath(".")
 

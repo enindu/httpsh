@@ -1,0 +1,55 @@
+[cert.ca]
+bits = 4096
+years = 1
+months = 0
+days = 0
+key = "certs/ca/key.pem"
+certificate = "certs/ca/certificate.pem"
+
+[cert.request.server]
+bits = 4096
+country = ["TC"]
+organization = ["Test Organization"]
+unit = ["Test Unit"]
+locality = ["Test Locality"]
+province = ["Test Province"]
+domain = "localhost"
+years = 1
+months = 0
+days = 0
+key = "certs/server/key.pem"
+certificate = "certs/server/certificate.pem"
+
+[cert.request.client]
+bits = 4096
+country = ["TC"]
+organization = ["Test Organization"]
+unit = ["Test Unit"]
+locality = ["Test Locality"]
+province = ["Test Province"]
+domain = "localhost"
+years = 1
+months = 0
+days = 0
+key = "certs/client/key.pem"
+certificate = "certs/client/certificate.pem"
+
+[server]
+network = "tcp"
+host = "127.0.0.1"
+port = 5000
+domain = "localhost"
+read_timeout = 5
+write_timeout = 5
+idle_timeout = 60
+ca_certificate = "certs/ca/certificate.pem"
+server_key = "certs/server/key.pem"
+server_certificate = "certs/server/certificate.pem"
+directory = "/path/to/directory/"
+mime = "text/plain; charset=UTF-8"
+methods = ["GET", "HEAD"]
+
+[server.executables]
+cat = ["--help"]
+grep = ["--help"]
+ls = ["--help"]

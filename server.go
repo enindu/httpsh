@@ -58,7 +58,7 @@ func (s *Server) Run() error {
 		}
 	}()
 
-	s.Log.Info("server.run", "message", "server is running")
+	s.Log.Info("server is running")
 	s.wait()
 	return s.stop(server)
 }
@@ -67,7 +67,7 @@ func (s *Server) wait() {
 	wait := make(chan os.Signal, 1)
 
 	signal.Notify(wait, syscall.SIGINT)
-	s.Log.Info("server.wait", "message", "server is waiting")
+	s.Log.Info("server is waiting")
 
 	<-wait
 
@@ -83,6 +83,6 @@ func (s *Server) stop(server *http.Server) error {
 		return err
 	}
 
-	s.Log.Info("server.stop", "message", "server is stopped")
+	s.Log.Info("server is stopped")
 	return nil
 }
